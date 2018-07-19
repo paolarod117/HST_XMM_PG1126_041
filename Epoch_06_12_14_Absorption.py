@@ -273,7 +273,10 @@ NV_Polyfit_Points =[make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1
                     make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1289.5,1290),
                     #make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1301.7,1301.85),
                     make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1310.8,1311),
-                    make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1327,1328)]        
+                    make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1327,1328),
+                    make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1337,1338),
+                    make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1347,1348),
+                    make_polyfit_point(Epoch_06_12_14_WAVE,Epoch_06_12_14_FLUX,1360,1362)]       
 #------------------------------------------------------------------------------
 #From 2D list, this provides two 1D lists
 x_poly_NV=[item[0]for item in NV_Polyfit_Points]
@@ -292,7 +295,7 @@ fig.set_size_inches(13.5, 10.5)
 #------------------------------------------------------------------------------
 #Creates Splines Function for NV region
 splinesNV=interp1d(x_poly_NV,y_poly_NV,kind = 'cubic', bounds_error = False)
-PreNormalizedNV_FX=Epoch_06_12_14_FLUX[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1320))]
+PreNormalizedNV_FX=Epoch_06_12_14_FLUX[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1340))]
 #------------------------------------------------------------------------------
 plt.figure(12)
 plt.title('NV Suspected Region spline for Normalization')
@@ -307,8 +310,8 @@ fig = plt.gcf()
 fig.set_size_inches(13.5, 10.5)
 #------------------------------------------------------------------------------
 #Creates list for NV region.
-NV_Spect_ER_2=Epoch_06_12_14_ERROR[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1320))]
-NV_Spect_WL_2= Epoch_06_12_14_WAVE[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1320))]
+NV_Spect_ER_2=Epoch_06_12_14_ERROR[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1340))]
+NV_Spect_WL_2= Epoch_06_12_14_WAVE[find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1260)):find_index(Epoch_06_12_14_WAVE,closest_value(Epoch_06_12_14_WAVE,1340))]
 NV_Spect_FX_2=[]
 #------------------------------------------------------------------------------
 #Normalization using Splines Method
