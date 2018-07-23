@@ -20,7 +20,7 @@ import matplotlib.ticker as mtick
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.style as style
-style.use('dark_background')
+#style.use('dark_background')
 #------------------------------------------------------------------------------
 #Initializing
 #------------------------------------------------------------------------------
@@ -56,6 +56,17 @@ PV_Spect_FX_4=  Epoch_06_14_15_FLUX[find_index(Epoch_06_14_15_WAVE,closest_value
 PV_Spect_ER_4= Epoch_06_14_15_ERROR[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1140)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1200))]
 PV_Spect_WL_4=  Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1140)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1200))]
 #------------------------------------------------------------------------------
+#Plots, 
+plt.figure(1)
+plt.title('PV Region Final form')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(PV_Spect_WL_4,PV_Spect_FX_4,zorder=0,c='blue',linewidth=2)
+plt.axis([1140,1200,.02,1.3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
 #To Create Fits files for PV
 """
 col1=fits.Column(name='wavelength',format='D',array=PV_Spect_WL_4)
@@ -68,7 +79,18 @@ tbhdu.writeto('PV_Epoch_06_14_15.fits')
 #------------------------------------------------------------------------------
 #SiIV SECTION
 #------------------------------------------------------------------------------
-    #Point selection
+#Plots,
+plt.figure(2)
+plt.title('SiIV Suspected Region Pre-Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.axis([1450,1490,.2,3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#From selected regions, generates a 2D list
 Sil_Polyfit_Point1=[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1445,1447),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1452.9,1453.8),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1461,1462),
@@ -77,23 +99,55 @@ Sil_Polyfit_Point1=[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1486,1487),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1497,1499)]
 #------------------------------------------------------------------------------
-#Points for Splines cubic
+#From 2D list, this provides two 1D lists
 x_poly_SiIV=[item[0]for item in Sil_Polyfit_Point1]
 y_poly_SiIV=[item[1]for item in Sil_Polyfit_Point1]
 #------------------------------------------------------------------------------
-#Splines Function
+plt.figure(3)
+plt.title('SiIV Suspected Region Point Selection for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_SiIV,y_poly_SiIV, 'ro')
+plt.axis([1450,1490,.2,3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates Splines Function for SiIV region
 splinesSiIV=interp1d(x_poly_SiIV,y_poly_SiIV, kind = 'cubic', bounds_error = False)
 PreNormalizedSI_FX=Epoch_06_14_15_FLUX[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1450)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1490))]
+#------------------------------------------------------------------------------
+plt.figure(4)
+plt.title('SiIV Suspected Region spline for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_SiIV,y_poly_SiIV, 'ro')
+plt.plot(Epoch_06_14_15_WAVE,splinesSiIV(Epoch_06_14_15_WAVE), 'black')
+plt.axis([1450,1490,.2,3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
 #------------------------------------------------------------------------------
 #Creates list for SiIV region.
 SiIV_Spect_FX_4=[]
 SiIV_Spect_ER_4=Epoch_06_14_15_ERROR[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1450)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1490))]
 SiIV_Spect_WL_4=Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1450)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1490))]
 #------------------------------------------------------------------------------
-#Splines method
+#Normalization using Splines Method
 for i in range(0,len(SiIV_Spect_WL_4)):
-    #Second part Second order poly
     SiIV_Spect_FX_4.append((PreNormalizedSI_FX[i])/(splinesSiIV(SiIV_Spect_WL_4[i])))
+#------------------------------------------------------------------------------
+plt.figure(5)
+plt.title('SiIV Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(SiIV_Spect_WL_4,SiIV_Spect_FX_4,zorder=0,c='blue',linewidth=2)
+plt.axis([1450,1490,.2,1.3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
 #------------------------------------------------------------------------------
 #To Create Fits files for SiIV
 """
@@ -103,11 +157,21 @@ col3=fits.Column(name='error'     ,format='D',array=SiIV_Spect_ER_4)
 cols = fits.ColDefs([col1, col2, col3])
 tbhdu = fits.BinTableHDU.from_columns(cols)
 tbhdu.writeto('SiIV_Epoch_06_14_15.fits')
-"""
+#"""
 #------------------------------------------------------------------------------
 #CIV
 #------------------------------------------------------------------------------
-#Creating points for splines
+plt.figure(6)
+plt.title('CIV  Suspected Region Pre-Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.axis([1605,1675,.02,5])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#From selected regions, generates a 2D list
 CIV_Polyfit_Points=[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1601.4,1603.4),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1614.3,1615.7),
                     #make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1622.6,1623.6),
@@ -126,22 +190,57 @@ CIV_Polyfit_Points=[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1673.4,1674.2),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1679.2,1681.2)]
 #------------------------------------------------------------------------------
+#From 2D list, this provides two 1D lists
 x_poly_CIV=[item[0]for item in CIV_Polyfit_Points]
 y_poly_CIV=[item[1]for item in CIV_Polyfit_Points]
 #------------------------------------------------------------------------------
-#splinesInt is a function i.e. f(x_wavelength)
+plt.figure(7)
+plt.title('CIV Suspected Region Point Selection for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_CIV,y_poly_CIV, 'ro')
+plt.axis([1605,1675,.02,5])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates Splines Function for CIV region
 splinesCIV=interp1d(x_poly_CIV,y_poly_CIV,kind = 'cubic', bounds_error = False)
 PreNormalizedCIV_FX=Epoch_06_14_15_FLUX[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1605)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1675))]
 #------------------------------------------------------------------------------
-#Normalized
+plt.figure(8)
+plt.title('CIV Suspected Region spline for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_CIV,y_poly_CIV, 'ro')
+plt.plot(Epoch_06_14_15_WAVE,splinesCIV(Epoch_06_14_15_WAVE), 'black')
+plt.axis([1605,1675,.02,5])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates list for CIV region.
 CIV_Spect_ER_4=Epoch_06_14_15_ERROR[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1605)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1675))]
 CIV_Spect_WL_4=arange(Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,1605)],Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,1675)],0.012234810431436927)
 CIV_Spect_FX_4=[]
-
+#------------------------------------------------------------------------------
+#Normalized using Splines Method
 for i in range(0,len(CIV_Spect_WL_4)):
-    #First part First order poly
     CIV_Spect_FX_4.append(PreNormalizedCIV_FX[i]/splinesCIV(CIV_Spect_WL_4[i]))
 #------------------------------------------------------------------------------
+plt.figure(9)
+plt.title('CIV Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(CIV_Spect_WL_4,CIV_Spect_FX_4,zorder=0,c='blue',linewidth=2)
+plt.axis([1605,1675,.02,1.3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates fits files which contains data for CIV Region
 """
 col1=fits.Column(name='wavelength',format='D',array=CIV_Spect_WL_4)
 col2=fits.Column(name='flux'      ,format='D',array=CIV_Spect_FX_4)
@@ -149,10 +248,21 @@ col3=fits.Column(name='error'     ,format='D',array=CIV_Spect_ER_4)
 cols = fits.ColDefs([col1, col2, col3])
 tbhdu = fits.BinTableHDU.from_columns(cols)
 tbhdu.writeto('CIV_Epoch_06_14_15.fits')
-"""
+#"""
 #------------------------------------------------------------------------------
-        #NV
+#NV
 #------------------------------------------------------------------------------
+plt.figure(10)
+plt.title('NV  Suspected Region Pre-Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.axis([1260,1340,.02,15])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------ 
+#From selected regions, generates a 2D list
 NV_Polyfit_Points =[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1257,1258),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1265,1266),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1273,1274),
@@ -163,24 +273,62 @@ NV_Polyfit_Points =[make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1289.5,1290),
                     #make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1301.7,1301.85),
                     make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1310.8,1311),
-                    make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1327,1328)]        
+                    make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1327,1328),
+                    make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1337,1338),
+                    make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1347,1348),
+                    make_polyfit_point(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,1360,1362)]       
 #------------------------------------------------------------------------------
+#From 2D list, this provides two 1D lists
 x_poly_NV=[item[0]for item in NV_Polyfit_Points]
 y_poly_NV=[item[1]for item in NV_Polyfit_Points]
 #------------------------------------------------------------------------------
-#splinesInt is a function i.e. f(x_wavelength)
-splinesNV=interp1d(x_poly_NV,y_poly_NV,kind = 'cubic', bounds_error = False)
-PreNormalizedNV_FX=Epoch_06_14_15_FLUX[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1320))]
+plt.figure(11)
+plt.title('NV  Suspected Region Point Selection for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_NV,y_poly_NV, 'ro')
+plt.axis([1260,1340,.02,15])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
 #------------------------------------------------------------------------------
-#Normalized
-NV_Spect_ER_4=Epoch_06_14_15_ERROR[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1320))]
-NV_Spect_WL_4= Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1320))]
+#Creates Splines Function for NV region
+splinesNV=interp1d(x_poly_NV,y_poly_NV,kind = 'cubic', bounds_error = False)
+PreNormalizedNV_FX=Epoch_06_14_15_FLUX[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1340))]
+#------------------------------------------------------------------------------
+plt.figure(12)
+plt.title('NV Suspected Region spline for Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(Epoch_06_14_15_WAVE,Epoch_06_14_15_FLUX,zorder=0,c='blue',linewidth=2)
+plt.plot(x_poly_NV,y_poly_NV, 'ro')
+plt.plot(Epoch_06_14_15_WAVE,splinesNV(Epoch_06_14_15_WAVE), 'black')
+plt.axis([1260,1340,.02,15])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates list for NV region.
+NV_Spect_ER_4=Epoch_06_14_15_ERROR[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1340))]
+NV_Spect_WL_4= Epoch_06_14_15_WAVE[find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1260)):find_index(Epoch_06_14_15_WAVE,closest_value(Epoch_06_14_15_WAVE,1340))]
 NV_Spect_FX_4=[]
+#------------------------------------------------------------------------------
+#Normalization using Splines Method
 for i in range(0,len(NV_Spect_WL_4)):
-    #First part First order poly
     NV_Spect_FX_4.append(PreNormalizedNV_FX[i]/splinesNV(NV_Spect_WL_4[i]))
 #------------------------------------------------------------------------------
-#Fits Files for NV Region
+plt.figure(13)
+plt.title('NV Normalization')
+plt.xlabel(r'Observed Wavelength ($\AA$)')
+plt.ylabel('Flux (ratio)')
+plt.axhline(y=1,color='grey')
+plt.plot(NV_Spect_WL_4,NV_Spect_FX_4,zorder=0,c='blue',linewidth=2)
+plt.axis([1260,1340,.02,1.3])
+fig = plt.gcf()
+fig.set_size_inches(13.5, 10.5)
+#------------------------------------------------------------------------------
+#Creates fits files which contains data for NV Region
 """
 col1=fits.Column(name='wavelength',format='D',array=NV_Spect_WL_4)
 col2=fits.Column(name='flux'      ,format='D',array=NV_Spect_FX_4)
@@ -188,4 +336,4 @@ col3=fits.Column(name='error'     ,format='D',array=NV_Spect_ER_4)
 cols = fits.ColDefs([col1, col2, col3])
 tbhdu = fits.BinTableHDU.from_columns(cols)
 tbhdu.writeto('NV_Epoch_06_14_15.fits')
-"""
+#"""
