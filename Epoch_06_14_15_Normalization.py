@@ -108,9 +108,9 @@ ER1,ER2=ER2,ER1
 #Observing points of interest
 #Search for flat regious with no absorption and emision points for normalization
 badpix(TF2,5180,5405,0)
-TFS1=smooth(TF1,20)   # This might be too much smoothing check. 
-TFS2=smooth(TF2,20)
-TFS3=smooth(TF3,20)
+TFS1=smooth(TF1,7)   # Use an odd number between 3 and 11, never more than 15 
+TFS2=smooth(TF2,7)
+TFS3=smooth(TF3,7)
 #------------------------------------------------------------------------------
 # Begining of Normalization
 #------------------------------------------------------------------------------
