@@ -39,6 +39,8 @@ def make_polyfit_point(xlist,ylist,start,end):#give this function some data and 
         y_sum+=ylist[i]
     y_ave=closest_value(ylist,y_sum/(end_index-start_index))       
     return [x_ave,y_ave]
+
+# These two functions below are dangerous: they change values...!
 def remove_zero_error(error):
     TME1=[]
     for i in range (0,len(error)):
@@ -105,8 +107,7 @@ TWL1,TWL2=TWL2,TWL1
 TF1,TF2=TF2,TF1
 ER1,ER2=ER2,ER1
 #------------------------------------------------------------------------------
-# Correct badpixels
-badpix(TF2,5180,5405,0)
+
 #------------------------------------------------------------------------------
 # Smooth the data for easy visualization
 TFS1=smooth(TF1,7)   # Use an odd number between 3 and 11, never more than 15 
@@ -165,9 +166,7 @@ for i in range(len(xping3)):
     yping3.append(best_fit_poly_3[0]*(xping3[i])+ best_fit_poly_3[1])
 """
 
-plt.plot(TWL1,TFS1)
-
-
+#plt.plot(TWL1,TFS1)
 
 #------------------------------------------------------------------------------
 #Second Order poly fit point selection for the PV region between gratings
@@ -208,52 +207,66 @@ best_fit_2ndpoly_2=(polyfit(x_2ndpoly_2,y_2ndpoly_2,2))
 # Just dividing by first order:
 #For Grating 1
 Normal1_TF1=[]
+Normal1_ER1=[]
 for i in range(len(TWL1)):
     Normal1_TF1.append(TF1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
+    Normal1_ER1.append(ER1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
 
 #For Grating 2
 Normal1_TF2=[]
+Normal1_ER2=[]
 for i in range(len(TWL2)):
     Normal1_TF2.append(TF2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
+    Normal1_ER2.append(ER2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
 
 #For Grating 3
 Normal1_TF3=[]
+Normal1_ER3=[]
 for i in range(len(TWL3)):
     Normal1_TF3.append(TF3[i]/(best_fit_poly_3[0]*(TWL3[i])+ best_fit_poly_3[1]))
+    Normal1_ER3.append(ER3[i]/(best_fit_poly_3[0]*(TWL3[i])+ best_fit_poly_3[1]))
 
 
 #  Dividing by first and second order around overlap range of gratings 1 and 2
 
 #For Grating 1:
 Normal_TF1=[]
-for i in range(0,find_index(TWL1,closest_value(TWL1,1167.23))):                #First part, First order poly
+Normal_ER1=[]
+for i in range(0,find_index(TWL1,closest_value(TWL1,1167.23))):                #First part, First order poly  
     Normal_TF1.append(TF1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
+    Normal_ER1.append(ER1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
+
 for i in range(find_index(TWL1,closest_value(TWL1,1167.23)),len(TWL1)):        #Second part, Second order poly
     Normal_TF1.append(TF1[i]/(best_fit_2ndpoly_1[0]*(TWL1[i])**2+ best_fit_2ndpoly_1[1]*(TWL1[i])+ best_fit_2ndpoly_1[2]))
+    Normal_ER1.append(ER1[i]/(best_fit_2ndpoly_1[0]*(TWL1[i])**2+ best_fit_2ndpoly_1[1]*(TWL1[i])+ best_fit_2ndpoly_1[2]))
 
 #For Grating 2
 Normal_TF2=[]
+Normal_ER2=[]
 for i in range(0,find_index(TWL2,closest_value(TWL2,1199.84))):                #First part, Second Order Polynomial
     Normal_TF2.append(TF2[i]/(best_fit_2ndpoly_2[0]*(TWL2[i])**2+ best_fit_2ndpoly_2[1]*(TWL2[i])+ best_fit_2ndpoly_2[2]))
+    Normal_ER2.append(ER2[i]/(best_fit_2ndpoly_2[0]*(TWL2[i])**2+ best_fit_2ndpoly_2[1]*(TWL2[i])+ best_fit_2ndpoly_2[2]))
 for i in range(find_index(TWL2,closest_value(TWL2,1199.84)),len(TWL2)):        #Second part, First Order Polynomial
     Normal_TF2.append(TF2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
+    Normal_ER2.append(ER2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
 
-
+#For Grating 3
 Normal_TF3 = Normal1_TF3
+Normal_ER3 = Normal1_ER3
 
 #-----------------------------------------------------------------------------
     #Begining of combining Gratings
 #------------------------------------------------------------------------------
-#all Flux below 2% of the normalization line is equated to 0
+# all Flux below 2% of the normalization line is equated to 0 : Wrong
 # PRH: This doesn't seem right: you cannot change actual values, except for plotting purposes.
 
 #remove_small(Normal_TFS1,0.02)
 #remove_small(Normal_TFS2,0.02)
 #remove_small(Normal_TFS3,0.02)
 
-# ??? Comment for now, not sure what it does...
-
 #------------------------------------------------------------------------------
+# Interpolation:
+
 #Finding stepsizes for each grating; then sets the wavelength array to the largest stepsize of the two
 TWL1_STEPSIZE=TWL1[1]-TWL1[0]
 TWL2_STEPSIZE=TWL2[1]-TWL2[0]
@@ -270,9 +283,22 @@ else:
     TWL_1_2_3_STEPSIZE=TWL_1_2_STEPSIZE
 
 
-# Voy por aqui...!
+# Create arrays 12 and 123 with the initial and ending points as before, but the largest stepsize of the ones combined
 TWL1_TWL2= arange(TWL1[0],TWL2[-1],TWL_1_2_STEPSIZE)
 TWL1_TWL2_TWL3= arange(TWL1[0],TWL3[-1],TWL_1_2_3_STEPSIZE)
+
+#Interpolation of flux and error
+
+Iflux1=interp(TWL1_TWL2,TWL1,Normal_TF1,left=0,right=0)
+Ierror1=interp(TWL1_TWL2,TWL1,Normal_ER1,left=0,right=0)
+Iflux2=interp(TWL1_TWL2,TWL2,Normal_TF2,left=0,right=0)
+Ierror2=interp(TWL1_TWL2,TWL2,Normal_ER2,left=0,right=0)
+
+
+Iflux3=interp(TWL1_TWL2_TWL3,TWL3,Normal_TF3,left=0,right=0)
+Ierror3=interp(TWL1_TWL2_TWL3,TWL3,Normal_ER3,left=0,right=0)
+
+
 #------------------------------------------------------------------------------
 # Edges of spectra go to zero and affect the combination later, so we cut the edges.
 
@@ -287,8 +313,11 @@ if( CUT_GRATINGS):# Enter the wavelength of the areas you would like to cut off,
     TWL2_End_Cut=1467.3 
     TWL3_Start_Cut=1390.0
     TWL3_End_Cut=None
-#------------------------------------------------------------------------------
-#Selecting Index for usage when combining Gratings.
+   
+
+#Selecting Index for usage when combining Gratings. <-- remove, left for teaching purposes    
+# Assigns indexes to the start and end wavelength cuts, if set. If not, None. 
+    
     if not TWL1_Start_Cut==None:TWL1_Start_Cut_index=find_index_from_value(TWL1,TWL1_Start_Cut)
     else:
         TWL1_Start_Cut_index=None
@@ -308,165 +337,190 @@ if( CUT_GRATINGS):# Enter the wavelength of the areas you would like to cut off,
     else:
         TWL3_End_Cut_index=None
 #------------------------------------------------------------------------------
-# Use the indexes above to XXX the normalized flux and the error spectrum 
-#In this Region Michael is using If and else statements to determing where to cut, from given selection above
+# Use the indexes above to the normalized flux and the error spectrum 
+#In this Region Michael is using If and else statements to determing where to cut, from given selection above <-- remove, left for teaching purposes
+# The sentence above is very wrong. He is not doing that, and we can tell already he uses if/then/else statements by looking. Do not comment that.     
+    
+# Never change values of data...! Create a new array where you do that, but not the main arrays. 
+
+    Normal_TF1_plot = Normal_TF1
+    Normal_TF2_plot = Normal_TF2
+    Normal_TF3_plot = Normal_TF3
+
+# The ER array was not normalized...! That is huge mistake. Corrected above.
+# Assigning random numbers to the original error value is not recommended
+# --> I removed all the ER=1 assignations.     
+    
     if not TWL1_Start_Cut==None and not TWL1_End_Cut==None :
-        for i in range(len(TWL1)):#This Loop removes the cut portion of the flux values you have set, not used in the code but it makes plotting the gratings not show the cut portion
+        for i in range(len(TWL1)):  # This Loop sets the cut portion of the flux values to zero, not used in the code but it makes plotting the gratings not show the cut portion <-- PRH: What do you mean "not used in the code"? It is changing the Normal_TFS1 and the ERR values!!!
+# <-- remove comment above, left for teaching purposes
             if  i<=TWL1_Start_Cut_index:
-                Normal_TFS1[i]=0
-                ER1[i]=1
+                Normal_TF1_plot[i]=0
             if i>TWL1_End_Cut_index:
-                Normal_TFS1[i]=0
-                ER1[i]=1
+                Normal_TF1_plot[i]=0
     elif not TWL1_Start_Cut==None and TWL1_End_Cut==None:
         for i in range(TWL1_Start_Cut_index):
-                Normal_TFS1[i]=0
-                ER1[i]=1
+                Normal_TF1_plot[i]=0
     elif TWL1_Start_Cut==None and not TWL1_End_Cut==None:
         for i in range(TWL1_End_Cut_index,len(TWL1)):
-                Normal_TFS1[i]=0
-                ER1[i]=1
+                Normal_TF1_plot[i]=0
                 
     if not TWL2_Start_Cut==None and not TWL2_End_Cut==None :
-        for i in range(len(TWL2)):#This Loop removes the cut portion of the flux values you have set, not used in the code but it makes plotting the gratings not show the cut portion
+        for i in range(len(TWL2)): # This Loop sets the cut portion of the flux values to zero for plotting purposes
             if  i<=TWL2_Start_Cut_index:
-                Normal_TFS2[i]=0
-                ER2[i]=1
+                Normal_TF2_plot[i]=0
             if i>TWL2_End_Cut_index:
-                Normal_TFS2[i]=0
-                ER2[i]=1
+                Normal_TF2_plot[i]=0
     elif not TWL2_Start_Cut==None and TWL2_End_Cut==None:
         for i in range(TWL2_Start_Cut_index):
-                Normal_TFS2[i]=0
-                ER2[i]=1
+                Normal_TF2_plot[i]=0
     elif TWL2_Start_Cut==None and not TWL2_End_Cut==None:
         for i in range(TWL2_End_Cut_index,len(TWL2)):
-                Normal_TFS2[i]=0
-                ER2[i]=1
+                Normal_TF2_plot[i]=0
     if not TWL3_Start_Cut==None and not TWL3_End_Cut==None :
         for i in range(len(TWL3)):#This Loop removes the cut portion of the flux values you have set, not used in the code but it makes plotting the gratings not show the cut portion
             if  i<=TWL3_Start_Cut_index:
-                Normal_TFS3[i]=0
-                ER3[i]=1
+                Normal_TF3_plot[i]=0
             if i>TWL3_End_Cut_index:
-                Normal_TFS3[i]=0
-                ER3[i]=1
+                Normal_TF3_plot[i]=0
     elif not TWL3_Start_Cut==None and TWL3_End_Cut==None:
         for i in range(TWL3_Start_Cut_index):
-                Normal_TFS3[i]=0
-                ER3[i]=1
+                Normal_TF3_plot[i]=0
     elif TWL3_Start_Cut==None and not TWL3_End_Cut==None:
         for i in range(TWL3_End_Cut_index,len(TWL3)):
-                Normal_TFS3[i]=0
-                ER3[i]=1
-#------------------------------------------------------------------------------
-#Interpolation of flux and error
-    Iflux1=interp(TWL1_TWL2,       TWL1[TWL1_Start_Cut_index:TWL1_End_Cut_index],Normal_TFS1[TWL1_Start_Cut_index:TWL1_End_Cut_index],left=0,right=0)
-    Ierror1=interp(TWL1_TWL2,      TWL1[TWL1_Start_Cut_index:TWL1_End_Cut_index],ER1[TWL1_Start_Cut_index:TWL1_End_Cut_index],left=0,right=0)
-    Iflux2=interp(TWL1_TWL2,       TWL2[TWL2_Start_Cut_index:TWL2_End_Cut_index],Normal_TFS2[TWL2_Start_Cut_index:TWL2_End_Cut_index],left=0,right=0)
-    Ierror2=interp(TWL1_TWL2,      TWL2[TWL2_Start_Cut_index:TWL2_End_Cut_index],ER2[TWL2_Start_Cut_index:TWL2_End_Cut_index],left=0,right=0)
-    Iflux3=interp(TWL1_TWL2_TWL3,  TWL3[TWL3_Start_Cut_index:TWL3_End_Cut_index],Normal_TFS3[TWL3_Start_Cut_index:TWL3_End_Cut_index],left=0,right=0)
-    Ierror3=interp(TWL1_TWL2_TWL3, TWL3[TWL3_Start_Cut_index:TWL3_End_Cut_index],ER3[TWL3_Start_Cut_index:TWL3_End_Cut_index],left=0,right=0)            
-else:
-    
-    Iflux1=interp(TWL1_TWL2,TWL1,Normal_TFS1,left=0,right=0)
-    Ierror1=interp(TWL1_TWL2,TWL1,ER1,left=0,right=0)
-    Iflux2=interp(TWL1_TWL2,TWL2,Normal_TFS2,left=0,right=0)
-    Ierror2=interp(TWL1_TWL2,TWL2,ER2,left=0,right=0)
-    Iflux3=interp(TWL1_TWL2_TWL3,TWL3,Normal_TFS3,left=0,right=0)
-    Ierror3=interp(TWL1_TWL2_TWL3,TWL3,ER3,left=0,right=0)
+                Normal_TF3_plot[i]=0
 
-Iflux1=interp(TWL1_TWL2,TWL1,Normal_TFS1,left=0,right=0)
-Ierror1=interp(TWL1_TWL2,TWL1,ER1,left=0,right=0)
-Iflux2=interp(TWL1_TWL2,TWL2,Normal_TFS2,left=0,right=0)
-Ierror2=interp(TWL1_TWL2,TWL2,ER2,left=0,right=0)
-Iflux3=interp(TWL1_TWL2_TWL3,TWL3,Normal_TFS3,left=0,right=0)
-Ierror3=interp(TWL1_TWL2_TWL3,TWL3,ER3,left=0,right=0)
+# Correct badpixels for plotting purposes
+badpix(Normal_TF2_plot,5180,5405,0)
+
+
 #------------------------------------------------------------------------------
 #Remove Zero Error
-TME1=remove_zero_error(Ierror1)
-TME2=remove_zero_error(Ierror2)
-TME3=remove_zero_error(Ierror3)
+# I think this is dangerous. Removed. Check how much it is needed and whether we can do something different. 
+#TME1=remove_zero_error(Ierror1)
+#TME2=remove_zero_error(Ierror2)
+#TME3=remove_zero_error(Ierror3)
 #------------------------------------------------------------------------------
-#Reconstructing Continuum using data and error         
-Averaged_TFS1_TFS2=[]
+#Reconstructing Continuum using data and error  
+       
+Combined_TF1_TF2=[]
 for i in range(0,len(TWL1_TWL2)):
     if (Iflux1[i]==0 and Iflux2[i]==0).all():
-            Averaged_TFS1_TFS2.append(0.0)
+            Combined_TF1_TF2.append(0.0)
     elif(Iflux1[i]==0 and Iflux2[i]!=0):
-        Averaged_TFS1_TFS2.append(Iflux2[i])
+        Combined_TF1_TF2.append(Iflux2[i])
     elif(Iflux1[i]!=0 and Iflux2[i]==0):
-        Averaged_TFS1_TFS2.append(Iflux1[i])
+        Combined_TF1_TF2.append(Iflux1[i])
         
-    elif(TME1[i]==1 and TME2[i]!=1):
-            Averaged_TFS1_TFS2.append(Iflux2[i])
-    elif(TME1[i]!=1 and TME2[i]==1):
-            Averaged_TFS1_TFS2.append(Iflux1[i])
-    elif(TME1[i]==1 and TME2[i]==1):
-            Averaged_TFS1_TFS2.append(0.0)
-    else:      
-            weight=(1/TME1[i])
-            weight2=(1/TME2[i])
-            spec=Iflux1[i]
-            spec2=Iflux2[i]
-            Averaged_TFS1_TFS2.append((weight*spec+weight2*spec2)/(weight+weight2))  
+    elif(Ierror1[i]==0 and Ierror2[i]!=0):
+        Combined_TF1_TF2.append(Iflux2[i])
+    elif(Ierror1[i]!=1 and Ierror2[i]==1):
+        Combined_TF1_TF2.append(Iflux1[i])
+    elif(Ierror1[i]==1 and Ierror2[i]==1):
+        Combined_TF1_TF2.append(0.0)
+    else:  
+        
+        if Ierror1[i]!=0:
+            weight1=(1./Ierror1[i])
+        else:
+            weight1=0
+        if Ierror2[i]!=0:
+            weight2=(1./Ierror2[i])
+        else:
+            weight2=0   
+        
+        spec1=Iflux1[i]
+        spec2=Iflux2[i]
+        Combined_TF1_TF2.append((weight1*spec1+weight2*spec2)/(weight1+weight2))  
 
-#Wait why did we add this twice??
-badpix(Averaged_TFS1_TFS2,32323,32550,0)
-Iflux_1_2=interp(TWL1_TWL2_TWL3,TWL1_TWL2,Averaged_TFS1_TFS2,left=0,right=0)
+        print(spec1,spec2)
+        print((weight1*spec1+weight2*spec2)/(weight1+weight2))
+        
 
-Error_TFS1_TFS2=[]
+# Check this below. Bad pixels should have removed from the original ones and only for plotting. 
+badpix(Combined_TF1_TF2,32323,32550,0)
+
+
+
+# It first combines and then interpolates to the TWL1_TWL2_TWL3 wavelength.        
+Iflux_1_2=interp(TWL1_TWL2_TWL3,TWL1_TWL2,Combined_TF1_TF2,left=0,right=0)
+
+Error_TF1_TF2=[]
 for i in range(len(TWL1_TWL2)):
-    if (Ierror1[i]!=1 and Ierror2[i]==1).all():
-        Error_TFS1_TFS2.append(Ierror1[i])
-    elif (Ierror1[i]==1 and Ierror2[i]!=1).all():
-        Error_TFS1_TFS2.append(Ierror2[i])
-    elif (Ierror1[i]==1 and Ierror2[i]==1).all():
-        Error_TFS1_TFS2.append(1)            
+    if (Ierror1[i]!=0 and Ierror2[i]==0).all():
+        Error_TF1_TF2.append(Ierror1[i])
+    elif (Ierror1[i]==0 and Ierror2[i]!=0).all():
+        Error_TF1_TF2.append(Ierror2[i])
+    elif (Ierror1[i]==0 and Ierror2[i]==0).all():
+        Error_TF1_TF2.append(1)            
     else:#if neither of the error values are one then take the weighted average of the error values.
-        Error_TFS1_TFS2.append(sqrt((Ierror1[i])**2+(Ierror2[i])**2))   
+        Error_TF1_TF2.append(sqrt((Ierror1[i])**2+(Ierror2[i])**2))   
 
-Ierror_1_2=interp(TWL1_TWL2_TWL3,TWL1_TWL2,Error_TFS1_TFS2,left=0,right=0)
-TME_1_2=remove_zero_error(Ierror_1_2)
+Ierror_1_2=interp(TWL1_TWL2_TWL3,TWL1_TWL2,Error_TF1_TF2,left=0,right=0)
 
-Averaged_TFS1_TFS2_TFS3=[]
+#TME_1_2=remove_zero_error(Ierror_1_2)
+
+Combined_TF1_TF2_TF3=[]
 for i in range(0,len(TWL1_TWL2_TWL3)):  
     if(Iflux_1_2[i]==0 and Iflux3[i]==0):
-        Averaged_TFS1_TFS2_TFS3.append(0.0)
+        Combined_TF1_TF2_TF3.append(0.0)
     elif(Iflux_1_2[i]==0 and Iflux3[i]!=0):
-        Averaged_TFS1_TFS2_TFS3.append(Iflux3[i])
+        Combined_TF1_TF2_TF3.append(Iflux3[i])
     elif(Iflux_1_2[i]!=0 and Iflux3[i]==0):
-        Averaged_TFS1_TFS2_TFS3.append(Iflux_1_2[i])
+        Combined_TF1_TF2_TF3.append(Iflux_1_2[i])
         
-    elif(TME_1_2[i]==1 and TME3[i]!=1):
-            Averaged_TFS1_TFS2_TFS3.append(Iflux3[i])
-    elif(TME_1_2[i]!=1 and TME3[i]==1):
-            Averaged_TFS1_TFS2_TFS3.append(Iflux_1_2[i])
-    elif(TME_1_2[i]==1 and TME3[i]==1):
-            Averaged_TFS1_TFS2_TFS3.append(0.0)
+    elif(Ierror_1_2[i]==0 and Ierror3[i]!=0):
+        Combined_TF1_TF2_TF3.append(Iflux3[i])
+    elif(Ierror_1_2[i]!=0 and Ierror3[i]==0):
+        Combined_TF1_TF2_TF3.append(Iflux_1_2[i])
+    elif(Ierror_1_2[i]==0 and Ierror3[i]==0):
+        Combined_TF1_TF2_TF3.append(0.0)
     
     else:
-        weight=(1/TME_1_2[i])
-        weight2=(1/TME3[i])
-        spec=Iflux_1_2[i]
-        spec2=Iflux3[i]
-        Averaged_TFS1_TFS2_TFS3.append((weight*spec+weight2*spec2)/(weight+weight2))
         
-Error_TFS1_TFS2_TFS3=[]
-for i in range(len(TWL1_TWL2)):
-    if (Ierror_1_2[i]!=1 and Ierror3[i]==1).all():
-        Error_TFS1_TFS2_TFS3.append(Ierror_1_2[i])
-    elif (Ierror_1_2[i]==1 and Ierror3[i]!=1).all():
-        Error_TFS1_TFS2_TFS3.append(Ierror3[i])
-    elif (Ierror_1_2[i]==1 and Ierror3[i]==1).all():
-        Error_TFS1_TFS2_TFS3.append(1)            
+        if Ierror_1_2[i]!=0:
+            weight1=(1./Ierror_1_2[i])
+        else:
+            weight1=0
+        if Ierror2[i]!=0:
+            weight2=(1./Ierror_1_2[i])
+        else:
+            weight2=0  
+        
+        spec1=Iflux_1_2[i]
+        spec2=Iflux3[i]
+        Combined_TF1_TF2_TF3.append((weight1*spec1+weight2*spec2)/(weight1+weight2))
+        
+        print(spec1,spec2)
+        print((weight1*spec1+weight2*spec2)/(weight1+weight2))
+        
+        
+Error_TF1_TF2_TF3=[]
+for i in range(len(TWL1_TWL2_TWL3)):
+    if (Ierror_1_2[i]!=0 and Ierror3[i]==0).all():
+        Error_TF1_TF2_TF3.append(Ierror_1_2[i])
+    elif (Ierror_1_2[i]==0 and Ierror3[i]!=0).all():
+        Error_TF1_TF2_TF3.append(Ierror3[i])
+    elif (Ierror_1_2[i]==0 and Ierror3[i]==0).all():
+        Error_TF1_TF2_TF3.append(1)            
     else:#if neither of the error values are one then take the weighted average of the error values.
-        Error_TFS1_TFS2_TFS3.append(sqrt((Ierror_1_2[i])**2+(Ierror3[i])**2))  
+        Error_TF1_TF2_TF3.append(sqrt((Ierror_1_2[i])**2+(Ierror3[i])**2))  
 #------------------------------------------------------------------------------
     #Name change for final normalized and combined data set
 #------------------------------------------------------------------------------
-Final_e_spectrum=Error_TFS1_TFS2_TFS3
-Final_x_spectrum=TWL1_TWL2_TWL3
-Final_y_spectrum=Averaged_TFS1_TFS2_TFS3
 
-plt.plot(Final_x_spectrum,Final_y_spectrum)
+Final_e_spectrum=Error_TF1_TF2_TF3
+Final_x_spectrum=TWL1_TWL2_TWL3
+Final_y_spectrum=Combined_TF1_TF2_TF3
+
+SFinal_e_spectrum=smooth(Final_e_spectrum,7)
+SFinal_y_spectrum=smooth(Final_y_spectrum,7)
+
+
+a=20000
+b=71163
+
+plt.plot(Final_x_spectrum[a:b],SFinal_y_spectrum[a:b])
+plt.plot(Final_x_spectrum[a:b],SFinal_e_spectrum[a:b])
+
+
