@@ -198,54 +198,42 @@ best_fit_2ndpoly_2=(polyfit(x_2ndpoly_2,y_2ndpoly_2,2))
 
 # The two points used are to switch from fitting a first-order polynomium to a second order polynomium
 
-# PRH: Typically, we divide first by first order and later correct with a second order...
+# PRH: This is wrong...! The whole thing should be divided by first order and later correct...!
 
 #From mathematica, the polynomial intersects around 1167.21 and 1199.84
 
 #Remember to change this every time the point selection changes
 #------------------------------------------------------------------------------
-
-# Just dividing by first order:
 #For Grating 1
-Normal1_TF1=[]
-for i in range(len(TWL1)):
-    Normal1_TF1.append(TF1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
 
-#For Grating 2
-Normal1_TF2=[]
-for i in range(len(TWL2)):
-    Normal1_TF2.append(TF2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
+# CHANGE THIS TO FIND THE POINTS WITHIN THE PROGRAM 
 
-#For Grating 3
-Normal1_TF3=[]
-for i in range(len(TWL3)):
-    Normal1_TF3.append(TF3[i]/(best_fit_poly_3[0]*(TWL3[i])+ best_fit_poly_3[1]))
+# The two points
 
 
-#  Dividing by first and second order around overlap range of gratings 1 and 2
 
 #For Grating 1:
-Normal_TF1=[]
+Normal_TFS1=[]
 for i in range(0,find_index(TWL1,closest_value(TWL1,1167.23))):                #First part, First order poly
-    Normal_TF1.append(TF1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
+    Normal_TFS1.append(TFS1[i]/(best_fit_poly_1[0]*(TWL1[i])+ best_fit_poly_1[1]))
 for i in range(find_index(TWL1,closest_value(TWL1,1167.23)),len(TWL1)):        #Second part, Second order poly
-    Normal_TF1.append(TF1[i]/(best_fit_2ndpoly_1[0]*(TWL1[i])**2+ best_fit_2ndpoly_1[1]*(TWL1[i])+ best_fit_2ndpoly_1[2]))
+    Normal_TFS1.append(TFS1[i]/(best_fit_2ndpoly_1[0]*(TWL1[i])**2+ best_fit_2ndpoly_1[1]*(TWL1[i])+ best_fit_2ndpoly_1[2]))
 
 #For Grating 2
-Normal_TF2=[]
+Normal_TFS2=[]
 for i in range(0,find_index(TWL2,closest_value(TWL2,1199.84))):                #First part, Second Order Polynomial
-    Normal_TF2.append(TF2[i]/(best_fit_2ndpoly_2[0]*(TWL2[i])**2+ best_fit_2ndpoly_2[1]*(TWL2[i])+ best_fit_2ndpoly_2[2]))
+    Normal_TFS2.append(TFS2[i]/(best_fit_2ndpoly_2[0]*(TWL2[i])**2+ best_fit_2ndpoly_2[1]*(TWL2[i])+ best_fit_2ndpoly_2[2]))
 for i in range(find_index(TWL2,closest_value(TWL2,1199.84)),len(TWL2)):        #Second part, First Order Polynomial
-    Normal_TF2.append(TF2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
+    Normal_TFS2.append(TFS2[i]/(best_fit_poly_2[0]*(TWL2[i])+ best_fit_poly_2[1]))
 
-
-Normal_TF3 = Normal1_TF3
-
-#-----------------------------------------------------------------------------
+#For Grating 3
+Normal_TFS3=[]
+for i in range(len(TWL3)):
+    Normal_TFS3.append(TFS3[i]/(best_fit_poly_3[0]*(TWL3[i])+ best_fit_poly_3[1]))
+#------------------------------------------------------------------------------
     #Begining of combining Gratings
 #------------------------------------------------------------------------------
 #all Flux below 2% of the normalization line is equated to 0
-# PRH: This doesn't seem right: you cannot change actual values, except for plotting purposes.
 
 #remove_small(Normal_TFS1,0.02)
 #remove_small(Normal_TFS2,0.02)
@@ -269,8 +257,6 @@ if(TWL_1_2_STEPSIZE<=TWL3_STEPSIZE):
 else:
     TWL_1_2_3_STEPSIZE=TWL_1_2_STEPSIZE
 
-
-# Voy por aqui...!
 TWL1_TWL2= arange(TWL1[0],TWL2[-1],TWL_1_2_STEPSIZE)
 TWL1_TWL2_TWL3= arange(TWL1[0],TWL3[-1],TWL_1_2_3_STEPSIZE)
 #------------------------------------------------------------------------------
